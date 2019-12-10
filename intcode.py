@@ -15,9 +15,6 @@ def parse_input_to_memory(filename):
 class ProgramBreak(Exception):
     pass
 
-class UnknownArgNumber(Exception):
-    pass
-
 class UnknownArgMode(Exception):
     pass
 
