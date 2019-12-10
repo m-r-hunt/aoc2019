@@ -83,16 +83,10 @@ class Intcode:
             return target
 
     def opcode_less_than(self, v1, v2, dest):
-        if v1 < v2:
-            self.memory[dest] = 1
-        else:
-            self.memory[dest] = 0
+        self.memory[dest] = 1 if v1 < v2 else 0
 
     def opcode_equals(self, v1, v2, dest):
-        if v1 == v2:
-            self.memory[dest] = 1
-        else:
-            self.memory[dest] = 0
+        self.memory[dest] = 1 if v1 == v2 else 0
 
     def opcode_adjust_rb(self, a):
         self.rb += a
@@ -121,32 +115,13 @@ class Intcode:
         try:
             while True:
                 opcode = self.memory[self.pc] % 100
-                mode1 = math.floor((self.memory[self.pc] / 100)) % 10
-                mode2 = math.floor((self.memory[self.pc] / 1000)) % 10
-                mode3 = math.floor((self.memory[self.pc] / 10000)) % 10
-                args, func, output_arg = self.opcodes[opcode]
-                ret = None
-                if args == 0:
-                    ret = func()
-                elif args == 1:
-                    arg1 = self.get_arg(1, mode1, output_arg)
-                    self.pc = (self.pc + args + 1)
-                    ret = func(arg1)
-                elif args == 2:
-                    arg1 = self.get_arg(1, mode1, output_arg)
-                    arg2 = self.get_arg(2, mode2, output_arg)
-                    self.pc = (self.pc + args + 1)
-                    ret = func(arg1, arg2)
-                elif args == 3:
-                    arg1 = self.get_arg(1, mode1, output_arg)
-                    arg2 = self.get_arg(2, mode2, output_arg)
-                    arg3 = self.get_arg(3, mode3, output_arg)
-                    self.pc = (self.pc + args + 1)
-                    ret = func(arg1, arg2, arg3)
-                else:
-                    print("Unknown n args:", args)
-                    raise UnknownArgNumber
-                self.pc = self.pc if ret == None else ret
+                n_args, func, output_arg = self.opcodes[opcode]
+                modes = [math.floor(self.memory[self.pc] / 10**(2+i)) % 10 for i in range(n_args)]
+                args = [self.get_arg(i+1, modes[i], output_arg) for i in range(n_args)]
+                self.pc += n_args + 1
+                ret = func(*args)
+                if ret != None:
+                    self.pc = ret
         except ProgramBreak:
             # Exceptions for control flow.
             # I feel dirty, but it's the smoothest way to do this in python without hardcoding in the halt instruction.
