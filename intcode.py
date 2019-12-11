@@ -19,7 +19,7 @@ class UnknownArgMode(Exception):
     pass
 
 class Intcode:
-    def __init__(self, init_memory, dump_output=False):
+    def __init__(self, init_memory, dump_io=False):
         self.pc = 0
         self.rb = 0
         self.memory = defaultdict(int, init_memory)
@@ -39,7 +39,7 @@ class Intcode:
         self.input_n = 0
         self.output = 0
         self.halted = False
-        self.dump_output = dump_output
+        self.dump_io = dump_io
 
     def is_halted(self):
         return self.halted
@@ -62,11 +62,13 @@ class Intcode:
         raise ProgramBreak
 
     def opcode_input(self, addr):
+        if self.dump_io:
+            print("INPUT!:", self.input[self.input_n])
         self.memory[addr] = self.input[self.input_n]
         self.input_n += 1
 
     def opcode_output(self, val):
-        if self.dump_output:
+        if self.dump_io:
             print("OUTPUT:", val) 
         self.output = val
         raise ProgramBreak
