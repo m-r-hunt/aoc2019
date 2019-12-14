@@ -39,13 +39,15 @@ class Intcode:
         self.input_n = 0
         self.output = 0
         self.halted = False
+        self.needs_input = False
         self.dump_io = dump_io
 
     def is_halted(self):
         return self.halted
 
-    def set_input(self, input):
-        self.input = input
+    def add_input(self, input):
+        self.input.append(input)
+        self.needs_input = False
 
     def set_noun_verb(self, noun, verb):
         self.memory[1] = noun
@@ -64,8 +66,13 @@ class Intcode:
     def opcode_input(self, addr):
         if self.dump_io:
             print("INPUT!:", self.input[self.input_n])
-        self.memory[addr] = self.input[self.input_n]
-        self.input_n += 1
+        if len(self.input) > self.input_n:
+            self.memory[addr] = self.input[self.input_n]
+            self.input_n += 1
+        else:
+            self.pc -= 2
+            self.needs_input = True
+            raise ProgramBreak
 
     def opcode_output(self, val):
         if self.dump_io:
