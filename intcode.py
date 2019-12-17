@@ -24,16 +24,16 @@ class Intcode:
         self.rb = 0
         self.memory = defaultdict(int, init_memory)
         self.opcodes = {
-            1: [3, self.opcode_add, 3],
-            2: [3, self.opcode_multiply, 3],
-            3: [1, self.opcode_input, 1],
-            4: [1, self.opcode_output, None],
-            5: [2, self.opcode_jump_if_true, None],
-            6: [2, self.opcode_jump_if_false, None],
-            7: [3, self.opcode_less_than, 3],
-            8: [3, self.opcode_equals, 3],
-            9: [1, self.opcode_adjust_rb, None],
-            99: [0, self.opcode_halt, None],
+            1: [3, self.opcode_add, 3, "ADD"],
+            2: [3, self.opcode_multiply, 3, "MUL"],
+            3: [1, self.opcode_input, 1, "IN"],
+            4: [1, self.opcode_output, None, "OUT"],
+            5: [2, self.opcode_jump_if_true, None, "JTRUE"],
+            6: [2, self.opcode_jump_if_false, None, "JFALSE"],
+            7: [3, self.opcode_less_than, 3, "LT"],
+            8: [3, self.opcode_equals, 3, "EQ"],
+            9: [1, self.opcode_adjust_rb, None, "ADJRB"],
+            99: [0, self.opcode_halt, None, "HALT"],
         }
         self.input = []
         self.input_n = 0
@@ -41,6 +41,7 @@ class Intcode:
         self.halted = False
         self.needs_input = False
         self.dump_io = dump_io
+        self.f = open("trace.txt", "w")
 
     def is_halted(self):
         return self.halted
@@ -66,6 +67,8 @@ class Intcode:
     def opcode_input(self, addr):
         if self.dump_io:
             print("INPUT!:", self.input[self.input_n])
+        self.f.write(str(self.input[self.input_n]))
+        self.f.write("\n")
         if len(self.input) > self.input_n:
             self.memory[addr] = self.input[self.input_n]
             self.input_n += 1
@@ -121,9 +124,10 @@ class Intcode:
         try:
             while True:
                 opcode = self.memory[self.pc] % 100
-                n_args, func, output_arg = self.opcodes[opcode]
+                n_args, func, output_arg, opcode_name = self.opcodes[opcode]
                 modes = [math.floor(self.memory[self.pc] / 10**(2+i)) % 10 for i in range(n_args)]
                 args = [self.get_arg(i+1, modes[i], output_arg) for i in range(n_args)]
+                self.f.write("{}: {} {}/{}\n".format(self.pc, opcode_name, [self.memory[self.pc+i+1] for i in range(n_args)], args))
                 self.pc += n_args + 1
                 ret = func(*args)
                 if ret != None:
